@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
         PrivateRequestController.class})
 public class ErrorHandler {
 
-    public static String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    public static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
