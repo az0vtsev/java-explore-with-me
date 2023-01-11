@@ -17,7 +17,7 @@ public class EventClient extends BaseClient {
     public static final String APP_NAME = "ewm-service";
 
     @Autowired
-    public EventClient(@Value("http://localhost:9090") String serverUrl, RestTemplateBuilder builder) {
+    public EventClient(@Value("${stats-server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))

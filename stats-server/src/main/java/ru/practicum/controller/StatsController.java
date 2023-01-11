@@ -21,13 +21,13 @@ public class StatsController {
     }
 
     @PostMapping("/hit")
-    void saveHit(@Valid @RequestBody EndpointHit hit) {
+    public void saveHit(@Valid @RequestBody EndpointHit hit) {
         log.info("POST /hit request received, request body={}", hit);
         service.save(hit);
     }
 
     @GetMapping("/stats")
-    List<ViewStats> getViewStats(@RequestParam String start,
+    public List<ViewStats> getViewStats(@RequestParam String start,
                                  @RequestParam String end,
                                  @RequestParam(defaultValue = "0") List<String> uris,
                                  @RequestParam(defaultValue = "false") Boolean unique) {
