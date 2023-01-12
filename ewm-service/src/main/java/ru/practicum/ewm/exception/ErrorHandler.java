@@ -20,8 +20,7 @@ import ru.practicum.ewm.user.controller.AdminUserController;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Slf4j
 @RestControllerAdvice(assignableTypes = {AdminUserController.class, AdminCategoryController.class,
@@ -37,7 +36,6 @@ public class ErrorHandler {
     public ErrorResponse handleNotFoundException(final NotFoundException e) {
         log.error(e.getMessage());
         return new ErrorResponse(
-                Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.toList()),
                 e.getMessage(),
                 "Entity not found.",
                 "NOT_FOUND",
@@ -50,22 +48,18 @@ public class ErrorHandler {
     public ErrorResponse handleMissingRequestParameterException(final MissingServletRequestParameterException e) {
         log.error(e.getMessage());
         return new ErrorResponse(
-                Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.toList()),
-                e.getMessage(),
+                e.getParameterName() + " is missing.",
                 "Request parameter is missing.",
                 "BAD_REQUEST",
                 DateTimeFormatter.ofPattern(DATE_TIME_PATTERN).format(LocalDateTime.now())
         );
     }
 
-
-
     @ExceptionHandler(NotValidDataException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorResponse handleNotValidDataException(final NotValidDataException e) {
         log.error(e.getMessage());
         return new ErrorResponse(
-                Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.toList()),
                 e.getMessage(),
                 "For the requested operation the conditions are not met.",
                 "FORBIDDEN",
@@ -73,15 +67,13 @@ public class ErrorHandler {
         );
     }
 
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
         log.error(e.getMessage());
         return new ErrorResponse(
-                Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.toList()),
-                e.getMessage(),
-                "Method argument not valid.",
+              Objects.requireNonNull(e.getFieldError()).getDefaultMessage(),
+                "Argument is not valid.",
                 "BAD_REQUEST",
                 DateTimeFormatter.ofPattern(DATE_TIME_PATTERN).format(LocalDateTime.now())
         );
@@ -92,8 +84,7 @@ public class ErrorHandler {
     public ErrorResponse handleConstraintViolationException(final DataIntegrityViolationException e) {
         log.error(e.getMessage());
         return new ErrorResponse(
-               Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.toList()),
-               e.getMessage(),
+                e.getMostSpecificCause().getMessage(),
                "Integrity constraint has been violated.",
                "CONFLICT",
                DateTimeFormatter.ofPattern(DATE_TIME_PATTERN).format(LocalDateTime.now())
@@ -105,8 +96,7 @@ public class ErrorHandler {
     public ErrorResponse handleRuntimeException(final RuntimeException e) {
         log.error(e.getMessage());
         return new ErrorResponse(
-                Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.toList()),
-                e.getClass().getName(),
+                e.getMessage(),
                 "Error occurred.",
                 "INTERNAL_SERVER_ERROR",
                 DateTimeFormatter.ofPattern(DATE_TIME_PATTERN).format(LocalDateTime.now())
