@@ -29,6 +29,7 @@ import java.util.Objects;
         PrivateRequestController.class})
 public class ErrorHandler {
 
+
     public static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     @ExceptionHandler(NotFoundException.class)
@@ -72,7 +73,8 @@ public class ErrorHandler {
     public ErrorResponse handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
         log.error(e.getMessage());
         return new ErrorResponse(
-              Objects.requireNonNull(e.getFieldError()).getDefaultMessage(),
+              "Field :'" + Objects.requireNonNull(e.getFieldError()).getField() + "' is not valid. "
+                      + Objects.requireNonNull(e.getFieldError()).getDefaultMessage(),
                 "Argument is not valid.",
                 "BAD_REQUEST",
                 DateTimeFormatter.ofPattern(DATE_TIME_PATTERN).format(LocalDateTime.now())
