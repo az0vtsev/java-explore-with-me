@@ -15,6 +15,13 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
     Page<Event> findAllByInitiator(Integer initiator, Pageable pageable);
 
     @Query(" select e from Event e "
+            + "where e.initiator = ?1 "
+            + "and e.state = ?2 "
+            + "and (e.eventDate >= ?3 and e.eventDate <= ?4)")
+    Page<Event> findForSubscriber(Integer initiator, EventState state, LocalDateTime start, LocalDateTime end,
+                                  Pageable pageable);
+
+    @Query(" select e from Event e "
             + "where e.initiator IN (?1) "
             + "and e.state IN (?2) "
             + "and e.category IN (?3) "

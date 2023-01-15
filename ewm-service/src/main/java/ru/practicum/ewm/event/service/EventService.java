@@ -9,6 +9,9 @@ public interface EventService {
     List<EventDto> getEventsByAdmin(List<Integer> users, List<String> states, List<Integer> categories,
                              String rangeStart, String rangeEnd, int from, int size);
 
+    List<EventShortDto> getEventsByPublisher(int userId, int publisherId, String rangeStart, String rangeEnd,
+                                             int from, int size);
+
     EventDto adminUpdateEvent(int eventId, AdminUpdateEventDto eventDto);
 
     EventDto updateEventState(int eventId, boolean isPublish);
