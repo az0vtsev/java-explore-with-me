@@ -23,12 +23,12 @@ import java.util.stream.Collectors;
 
 @Service
 public class SubscriptionServiceImpl implements SubscriptionService {
-    private final SubscriptionRequestRepository repository;
+    private final SubscriptionRequestRepository subscriptionRepository;
     private final UserRepository userRepository;
 
     @Autowired
-    public SubscriptionServiceImpl(SubscriptionRequestRepository repository, UserRepository userRepository) {
-        this.repository = repository;
+    public SubscriptionServiceImpl(SubscriptionRequestRepository subscriptionRepository, UserRepository userRepository) {
+        this.subscriptionRepository = subscriptionRepository;
         this.userRepository = userRepository;
     }
 
@@ -36,7 +36,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public void subscribeToUser(int subscriberId, int publisherId) {
         checkUserExists(subscriberId);
         checkUserExists(publisherId);
-        Optional<SubscriptionRequest> request = repository
+        Optional<SubscriptionRequest> request = subscriptionRepository
                 .findByFromUserAndToUser(subscriberId, publisherId);
         if (request.isPresent()) {
             if (request.get().getStatus() == SubscriptionRequestStatus.CONFIRM) {
@@ -48,7 +48,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         " to user id=" + publisherId + ".");
             }
         }
-        repository.save(new SubscriptionRequest(
+        subscriptionRepository.save(new SubscriptionRequest(
                 subscriberId,
                 publisherId,
                 SubscriptionRequestStatus.WAITING,
@@ -59,19 +59,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public void unsubscribeFromUser(int subscriberId, int publisherId) {
         checkUserExists(subscriberId);
         checkUserExists(publisherId);
-        Optional<SubscriptionRequest> request = repository
+        Optional<SubscriptionRequest> request = subscriptionRepository
                 .findByFromUserAndToUserAndStatus(subscriberId, publisherId, SubscriptionRequestStatus.CONFIRM);
         if (request.isEmpty()) {
             throw new NotValidDataException("User id=" + subscriberId + " doesn't subscribe to user id="
                     + publisherId + ".");
         }
-        repository.deleteById(request.get().getId());
+        subscriptionRepository.deleteById(request.get().getId());
     }
 
     @Override
     public List<UserShortDto> getUserSubscribers(int userId, int from, int size) {
         checkUserExists(userId);
-        List<SubscriptionRequest> subscribeRequests = repository
+        List<SubscriptionRequest> subscribeRequests = subscriptionRepository
                 .findAllByToUserAndStatus(userId, SubscriptionRequestStatus.CONFIRM,
                         getPageRequest(from, size)).stream().collect(Collectors.toList());
         List<UserShortDto> subscribers = new ArrayList<>();
@@ -86,7 +86,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public List<UserShortDto> getUserSubscriptions(int userId,  int from, int size) {
         checkUserExists(userId);
-        List<SubscriptionRequest> subscriptionRequests = repository
+        List<SubscriptionRequest> subscriptionRequests = subscriptionRepository
                 .findAllByFromUserAndStatus(userId, SubscriptionRequestStatus.CONFIRM,
                         getPageRequest(from, size)).stream().collect(Collectors.toList());
         List<UserShortDto> subscriptions = new ArrayList<>();
@@ -101,7 +101,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public List<SubscriptionRequestDto> getUserRequestSubscriptions(int userId) {
         checkUserExists(userId);
-        List<SubscriptionRequest> requests = repository
+        List<SubscriptionRequest> requests = subscriptionRepository
                 .findAllByToUserAndStatus(userId, SubscriptionRequestStatus.WAITING);
         List<SubscriptionRequestDto> requestDtos = new ArrayList<>();
         requests.forEach(request -> {
@@ -121,7 +121,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public void updateSubscribeStatus(int userId, int requestId, boolean isConfirm) {
         checkUserExists(userId);
-        SubscriptionRequest request = repository.findById(requestId)
+        SubscriptionRequest request = subscriptionRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Subscription request id=" + requestId
                         + " was not found"));
         if (request.getToUser() != userId) {
@@ -134,10 +134,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
         if (isConfirm) {
             request.setStatus(SubscriptionRequestStatus.CONFIRM);
-            repository.save(request);
+            subscriptionRepository.save(request);
         } else {
             request.setStatus(SubscriptionRequestStatus.REJECT);
-            repository.save(request);
+            subscriptionRepository.save(request);
         }
     }
 
