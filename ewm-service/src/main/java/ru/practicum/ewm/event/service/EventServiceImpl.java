@@ -19,6 +19,8 @@ import ru.practicum.ewm.request.dto.ParticipationRequestMapper;
 import ru.practicum.ewm.request.model.ParticipationRequest;
 import ru.practicum.ewm.request.model.ParticipationRequestState;
 import ru.practicum.ewm.request.repository.ParticipationRequestRepository;
+import ru.practicum.ewm.subscription.model.SubscriptionRequestStatus;
+import ru.practicum.ewm.subscription.repository.SubscriptionRequestRepository;
 import ru.practicum.ewm.user.dto.UserMapper;
 import ru.practicum.ewm.user.dto.UserShortDto;
 import ru.practicum.ewm.user.model.User;
@@ -41,13 +43,17 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final ParticipationRequestRepository requestRepository;
 
+    private final SubscriptionRequestRepository subscriptionRepository;
+
     @Autowired
     public EventServiceImpl(EventRepository repository, UserRepository userRepository,
-                            CategoryRepository categoryRepository, ParticipationRequestRepository requestRepository) {
+                            CategoryRepository categoryRepository, ParticipationRequestRepository requestRepository,
+                            SubscriptionRequestRepository subscriptionRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.requestRepository = requestRepository;
+        this.subscriptionRepository = subscriptionRepository;
     }
 
     @Override
@@ -310,6 +316,30 @@ public class EventServiceImpl implements EventService {
         event.setViews(event.getViews() + 1);
         repository.save(event);
         return EventMapper.mapToEventFullDto(event, categoryDto, initiatorDto);
+    }
+
+    @Override
+    public List<EventShortDto> getEventsByPublisher(int userId, int publisherId, String rangeStart, String rangeEnd,
+                                                    int from, int size) {
+        getUser(userId);
+        User publisher = getUser(publisherId);
+        subscriptionRepository.findByFromUserAndToUserAndStatus(userId,
+                publisherId, SubscriptionRequestStatus.CONFIRM)
+                .orElseThrow(() -> new NotValidDataException("User id=" + userId + "doesn't subscribe to user id=" +
+                        publisherId + "."));
+        UserShortDto initiatorDto = UserMapper.mapToUserShortDto(publisher);
+        PageRequest pageRequest = getPageRequest(from, size);
+        LocalDateTime start = parseRangeStart(rangeStart);
+        LocalDateTime end = parseRangeEnd(rangeEnd);
+        List<EventShortDto> eventsDto = new ArrayList<>();
+        repository.findForSubscriber(userId, EventState.PUBLISHED, start, end, pageRequest)
+                .stream()
+                .forEach(event -> {
+                    Category category = getCategory(event.getCategory());
+                    CategoryDto categoryDto = CategoryMapper.mapToCategoryDto(category);
+                    eventsDto.add(EventMapper.mapToEventShortDto(event, categoryDto, initiatorDto));
+                });
+        return eventsDto;
     }
 
     private boolean isUsersListDefault(List<Integer> users) {

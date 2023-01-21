@@ -29,6 +29,18 @@ public class PrivateEventController {
         this.service = service;
     }
 
+    @GetMapping("/{userId}/subscriptions/{publisherId}/events")
+    List<EventShortDto> getUserSubscriptionEvents(@Positive @PathVariable int userId,
+                                                  @Positive @PathVariable int publisherId,
+                                                  @RequestParam(required = false) String rangeStart,
+                                                  @RequestParam(required = false) String rangeEnd,
+                                                  @PositiveOrZero @RequestParam (defaultValue = "0") int from,
+                                                  @Positive @RequestParam (defaultValue = "10") int size) {
+        log.info("GET /users/{}/subscriptions/{}/events?rangeStart={}&rangeEnd={}&from={}&size={} request received",
+                userId, publisherId, rangeStart, rangeEnd, from, size);
+        return service.getEventsByPublisher(userId, publisherId, rangeStart, rangeEnd, from, size);
+    }
+
     @GetMapping("/{userId}/events")
     List<EventShortDto> getUserEvents(@Positive @PathVariable int userId,
                                       @PositiveOrZero @RequestParam (defaultValue = "0") int from,
